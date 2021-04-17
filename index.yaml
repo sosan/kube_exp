@@ -1,0 +1,22 @@
+apiVersion: v1
+entries:
+  despliegue-mongo-redis-api:
+  - apiVersion: v2
+    created: "2021-04-17T16:08:21.687543795Z"
+    description: Descripcion geneerica
+    digest: 3b0fad5116e1a8db64a559f4447d3fa7c6425e77d8a2eef481aa6a8261b448a6
+    home: https://www.www.com
+    icon: https://www.url-icon.com
+    keywords:
+    - go
+    - node
+    - kubernetes
+    maintainers:
+    - email: h@h.com
+      name: nombre-maintern
+    name: despliegue-mongo-redis-api
+    type: application
+    urls:
+    - https://github.com/sosan/kube_exp/releases/download/despliegue-mongo-redis-api-0.0.1/despliegue-mongo-redis-api-0.0.1.tgz
+    version: 0.0.1
+generated: "2021-04-17T16:08:21.687555595Z"
