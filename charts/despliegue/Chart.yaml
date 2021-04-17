@@ -1,0 +1,17 @@
+apiVersion: v2
+name: despliegue-mongo-redis-api
+description: Descripcion geneerica
+type: application
+version: 0.0.2
+
+keywords:
+  - go
+  - node
+  - kubernetes
+
+home: https://www.www.com
+maintainers:
+- name: nombre-maintern
+  email: h@h.com
+
+icon: https://www.url-icon.com
