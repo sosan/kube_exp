@@ -2,7 +2,7 @@ apiVersion: v2
 name: despliegue-mongo-redis-api
 description: Descripcion geneerica
 type: application
-version: 0.0.2
+version: 0.0.1
 
 keywords:
   - go
