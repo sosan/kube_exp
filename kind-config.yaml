@@ -1,0 +1,32 @@
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+nodes:
+- role: control-plane
+- role: worker
+  extraMounts:
+      - hostPath: emongodb
+        containerPath: /data/db
+      - hostPath: /mnt/despliegue-data/redis
+        containerPath: /data
+      - hostPath: /mnt/despliegue-data/api
+        containerPath: /usr/src/app
+  extraPortMappings:
+  # en caso de uso de un nginx
+  # api
+  - containerPort: 3000
+    hostPort: 3001
+  - containerPort: 9229
+    hostPort: 9229
+  # mongo-express
+  - containerPort: 8081
+    hostPort: 8082
+  # mongo
+  - containerPort: 27017
+    hostPort: 27018
+  # redis
+  - containerPort: 6379
+    hostPort: 6380
+  # redis-commander
+  - containerPort: 8081
+    hostPort: 8083
+

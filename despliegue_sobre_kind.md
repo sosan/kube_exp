@@ -26,7 +26,8 @@ Ya hemos dado unas pinceladas, seguimos.
 
 Kind tiene particularidades que ayudan a cargar imagenes docker en un cluster local para utilizarlo desde kubernetes.
 
-## PLUGIN VISUAL STUDIO CODE
+
+## PLUGIN KUBERNETES PARA VISUAL STUDIO CODE
 - Kubernetes para VSCode. 
 > https://marketplace.visualstudio.com/items?itemName=ms-kubernetes-tools.vscode-kubernetes-tools
 
@@ -39,6 +40,7 @@ Han desarrollado bastantes herramientas para facilitar los despligues, las mas u
   - **helm.** package manager, muy estilo a apt, npm,...
   - **jsonnet.** json que permite variables, funciones, no tiene tipos.. asi que seria lo mismo que helm al final
   - **ytt.** Herramienta que te permite realizar templates con variables, for, if, funciones,... muy estilo sass
+
 
 ## HELM
 
@@ -120,6 +122,20 @@ Ademas, hay charts para casi cualquier aplicacion. Coleccion de charts de helm:
 - **Bitnami.** https://bitnami.com/stacks/helm
 - **Github** https://github.com/search?q=chart+helm
 
+
+### INSTALACION HELM
+
+https://github.com/helm/helm/releases
+
+Para linux:
+```
+wget https://get.helm.sh/helm-v3.5.3-linux-amd64.tar.gz && \
+tar -zxvf helm-v3.5.3-linux-amd64.tar.gz && \
+sudo mv linux-amd64/helm /usr/local/bin/helm && \
+rm -rf helm-v3.5.3-linux-amd64.tar.gz linux-amd64/
+```
+
+
 ## CREACION CLUSTER
 
 Kind necesita un port mapping con la red exterior a docker en el caso de usar `NodePort` en nuestro caso usamos `ClusterIp`, pero no se si mas adelante lo usaremos `NodePort`, `listenAddress` y `protocol` son opcionales ya que vienen por defecto en `0.0.0.0`
@@ -159,7 +175,6 @@ nodes:
   # redis-commander
   - containerPort: 8081
     hostPort: 8083
-
 EOF
 ```
 
@@ -181,31 +196,60 @@ Creating cluster "testing" ...
 
 Si realizamos un `docker ps` vemos los puertos mapeados:
 
-- 0.0.0.0:9229->9229/tcp, 
-- 0.0.0.0:3001->3000/tcp, 
-- 0.0.0.0:6380->6379/tcp, 
-- 0.0.0.0:8082->8081/tcp, 
-- 0.0.0.0:8083->8081/tcp, 
-- 0.0.0.0:27018->27017/tcp   
+- 0.0.0.0:9229->9229/tcp
+- 0.0.0.0:3001->3000/tcp
+- 0.0.0.0:6380->6379/tcp
+- 0.0.0.0:8082->8081/tcp
+- 0.0.0.0:8083->8081/tcp
+- 0.0.0.0:27018->27017/tcp
 - 127.0.0.1:34443->6443/tcp
 
 
-## INSTALACION HELM
+
+## DESPLIEGUE CON KUBECTL
+
+Descargamos el repo con los charts
+```
+git clone https://github.com/sosan/kube_exp.git
+```
+
+Creamos los namespaces para cada despliegue:
+
+```
+kubectl create ns dev-mongo && \
+kubectl create ns dev-redis && \
+kubectl create ns dev-microservicios
+```
+
+
+Despliegue mongo con manifiesto:
+
+```
+kubectl create -f kube_exp/charts/despliegue-mongo/templates/. -n dev-mongo
+```
+
+Despliegue redis con manifiesto:
+
+```
+kubectl create -f kube_exp/charts/despliegue-redis/templates/. -n dev-redis
+```
+
+Despliegue de los microservicios con manifiesto:
+
+```
+kubectl create -f kube_exp/charts/despliegue-microservicio-1/templates/. -n dev-microservicios && \
+kubectl create -f kube_exp/charts/despliegue-microservicio-2/templates/. -n dev-microservicios && \
+kubectl create -f kube_exp/charts/despliegue-microservicio-3/templates/. -n dev-microservicios
+```
+```
+watch kubectl get pod,svc -n dev-microservicios
+```
+
+## DESPLIEGUE CON HELM A KUBERNETES
 
 ![imagen_combo_helm](./imagenes/helm_combo.png)
 
-
-https://github.com/helm/helm/releases
-
-Para linux:
-```
-wget https://get.helm.sh/helm-v3.5.3-linux-amd64.tar.gz && \
-tar -zxvf helm-v3.5.3-linux-amd64.tar.gz && \
-sudo mv linux-amd64/helm /usr/local/bin/helm && \
-rm -rf helm-v3.5.3-linux-amd64.tar.gz linux-amd64/
-```
-
-## REPOSITORIOS CHART
+En la imagen vemos un despliegue mas realista, ahora de momento desplegaremos de helm a kubernetes directo, sin pasar por ci/cd. Los microservicios se suelen pasar por ci/cd, ahora de momento los desplegamos directo a kubernetes.
 
 Helm depende de los repositorios chart. Chart es una coleccion de archivos que describen una serie de recursos para kubernestes, se renderizan en manifiestos. La estructura de un chart tipo es un repo con esta estructura:
 
@@ -233,7 +277,22 @@ directorio-charts/
 
 El directorio `templates` contiene los archivos con templates que se combinan con values.yaml y la linea de comandosy, el conjunto se renderiza en manifiestos de Kubernetes.
 
-En nuestro ejemplo, los archivos values.yaml , _helpers.tpl esta rellenado tipico,
+El archivo `NOTES.txt` muestra instrucciones post-instalacion, por ejemplo, comandos para obtener la ip, etc...
+
+Para crear esta estructura facil, nos ayuda helm con un:
+
+```
+helm create dev-mongo
+```
+
+Creara los templates para despues rellenar los datos del despliegue del mongo y el mongo-express. Los templates de helm son dificiles de seguir, de momento el codigo de desplgieu lo realizaremos sin templates para que se vea mejor los campos.
+
+> **¿Que es mejor tener un chart con todo el despliegue o cada microservicio tenga su propio chart?**
+
+> **Un chart para todo el despliegue te la comodidad que con un comando lo despliegas todo, pero sientes que tus servicios estan acoplados uno a otro, en cambio un chart para cada microservicio te da la elasticidad de tenerlos independientes.**
+
+> **Normalmente no se suele utilizar ni uno, ni otro, se suele utilizar chart padre (umbrella) y un chart especifico para cada microservicio. Cuando se construya el chart umbrella se auto rellena con los charts de cada microservicio y ademas el chart padre hace de template para los microservicios, los charts hijos sobreescriben la configuracion que necesitan. Cada equipo sobreescribe lo que necesite del chart padre(umbrella). En este capitulo, no seguiremos este metodologia, mas avanzado lo veremos en detalle.**
+
 
 Para instalar con helm primero debemos incluir el repo chart que queremos usar.
 
@@ -241,9 +300,18 @@ Para instalar con helm primero debemos incluir el repo chart que queremos usar.
 helm repo add despliegue https://url_repo_chart.com/
 ```
 
-En nuestro caso, dentro del chart esta el despliegue de redis, mongodb, mongo-express, api, es un antipatron, cada aplicacion deberia tener su propio chart.
+En nuestro caso, tenemos dentro de la carpeta `despliegue` el chart del despliegue de redis, mongodb, mongo-express, api.
 
-podriamos realizar un `helm install mi-redis hephy/redis -n masivo --create-namespace` y ya tendriamos instalado el redis en el cluster, pero por si hay algun problema con kind, puertos, etc..., prefiero controlarlo todo con un chart.
+En la carpeta `despliegue-mongo` tenemos el despliegue de mongodb y mongo-express. En la carpeta `despliegue-redis` tenemos el despliegue de redis y redis-commander y en la carpeta `despliegue-microservicio-frontend` tenemos el despliegue de los microservicios.
+
+Ejemplo de un despliegue de redis con helm:
+
+```
+helm repo add hephy https://charts.teamhephy.com && \
+helm install redisdb hephy/redis --version v2.4.2 -n dev-redis --create-namespace
+
+``` 
+y ya tendriamos instalado el redis en el cluster, pero por si hay algun problema con kind, puertos, etc...,prefiero control con un chart.
 
 URL de nuestro chart:
 
@@ -252,6 +320,53 @@ https://sosan.github.io/kube_exp/
 ```
 
 Los charts que estan online estan comprimidos en `.tgz`, helm al realizar un pull/install se conecta a la url y comprueba que haya un index.yaml, que le indica la ruta de los tgz para descargarse.
+
+Github tiene github-action que convierte el chart en tgz, pero nosotros mismos podemos crear el tgz con un:
+
+```
+helm package charts/despliegue-mongo && \
+helm package charts/despliegue-redis && \
+helm package charts/despliegue-microservicios
+```
+
+nos crearara los `.tgz`
+
+```
+Successfully packaged chart and saved it to: despliegue-mongo-0.0.1.tgz
+[...]
+```
+para crear el index lanzamos:
+
+```
+helm repo index . --url https://sosan.github.io/kube_exp/
+```
+
+Nos genera un archivo index.yaml similar a:
+
+```
+apiVersion: v1
+entries:
+  despliegue-mongo:
+  - apiVersion: v2
+    [...]
+    name: despliegue-mongo
+    type: application
+    urls:
+    - https://sosan.github.io/kube_exp/despliegue-mongo-0.0.1.tgz
+    version: 0.0.1
+  despliegue-redis:
+  - apiVersion: v2
+    [...]
+    name: despliegue-redis
+    type: application
+    urls:
+    - https://sosan.github.io/kube_exp/despliegue-redis-0.0.1.tgz
+    version: 0.0.1
+```
+
+Ahora subimos el index.yaml y los .tgz que nos ha creado a un servidor web y ya hemos creado el chart para consultarlo/descargar online
+
+Todo este proceso de creacion del chart, se puede simplificar con un github-action.
 
 
 ## INSTALACION LOCAL
@@ -265,13 +380,13 @@ helm pull repo-despliegue/despliegue-mongo-redis-api --untar
 - **repo-despliegue** es el nombre que le damos al repo del chart
 - **repo-despliegue/despliegue-mongo-redis-api** es el nombre del repo: `repo-despliegue` / `despliegue-mongo-redis-api` es el nombre del chart que tiene online
 
-> lo tenemos descomprimido y ahora podemos inspeccionar el chart y proceder con la instalacion local
+> lo tenemos descomprimido y ahora podemos inspeccionar/modificar el chart y seguir con la instalacion local
 
 ```
-helm install despliegue despliegue-mongo-redis-api/ -n masivo --create-namespace
+helm install mongo ./kube_exp/despliegue-mongo/ -n dev-mongo --create-namespace
 ```
 
-- **despliegue** es el nombre local que le damos al chart.
+- **mongo** es el nombre local que le damos al chart.
 - despliegue-mongo-redis-api/ es la carpeta del chart
 - `--create-namespace` nos crea el namespace si no existe
 
@@ -280,13 +395,13 @@ helm install despliegue despliegue-mongo-redis-api/ -n masivo --create-namespace
 
 ```
 helm repo add repo-despliegue https://sosan.github.io/kube_exp/ && \
-helm install despliegue repo-despliegue/despliegue-mongo-redis-api -n masivo --create-namespace
+helm install mongo repo-despliegue/despliegue-mongo-redis-api -n masivo --create-namespace
 ```
 - **repo-despliegue** es el nombre que le damos al repo del chart
-- **despliegue** es el nombre local que le damos al chart.
+- **mongo** es el nombre local que le damos al chart.
 - **repo-despliegue/despliegue-mongo-redis-api** es el nombre del repo: `repo-despliegue` / `despliegue-mongo-redis-api` es el nombre del chart que tiene online
 
-si queremos borrar el despliegue `helm delete despliegue -n masivo`
+si queremos borrar el despliegue `helm uninstall mongo -n dev-mongo`
 
 vemos como va desplegando (control + c para salir):
 ```

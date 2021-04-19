@@ -22,6 +22,7 @@ el gateway recibe las requests entrantes y las direcciona a la parte del sistema
 ### HERRAMIENTAS DE API GATEWAY:
 
 - ambassador: (rey indiscutible de los api gateway) https://www.getambassador.io/products/edge-stack/api-gateway/
+- krakend https://www.krakend.io/
 - kong https://konghq.com/
 
 

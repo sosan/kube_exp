@@ -1,0 +1,13 @@
+apiVersion: v2
+name: despliegue-mongo
+description: Desplegamos mongodb y mongo-express
+type: application
+version: 0.0.1
+keywords:
+  - mongodb
+  - mongo-express
+home: https://www.www.com
+maintainers:
+- name: nombre-maintern
+  email: h@h.com
+icon: https://www.url-icon.com

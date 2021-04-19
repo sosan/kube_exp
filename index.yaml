@@ -1,0 +1,40 @@
+apiVersion: v1
+entries:
+  despliegue-mongo:
+  - apiVersion: v2
+    created: "2021-04-19T18:46:51.201697706+02:00"
+    description: Desplegamos mongodb y mongo-express
+    digest: a5695f616198556cc461e933eaa9e57ff708f0a55dcfb7c531b729bec981460a
+    home: https://www.www.com
+    icon: https://www.url-icon.com
+    keywords:
+    - mongodb
+    - mongo-express
+    maintainers:
+    - email: h@h.com
+      name: nombre-maintern
+    name: despliegue-mongo
+    type: application
+    urls:
+    - https://sosan.github.io/kube_exp/despliegue-mongo-0.0.1.tgz
+    version: 0.0.1
+  despliegue-redis:
+  - apiVersion: v2
+    created: "2021-04-19T18:46:51.203989738+02:00"
+    description: Despliegue redis y redis-commander
+    digest: 3f62baa1fadefabbd5c1df9c94e401ad3a66d0c2219709851620eb621a4de8f5
+    home: https://www.www.com
+    icon: https://www.url-icon.com
+    keywords:
+    - go
+    - node
+    - kubernetes
+    maintainers:
+    - email: h@h.com
+      name: nombre-maintern
+    name: despliegue-redis
+    type: application
+    urls:
+    - https://sosan.github.io/kube_exp/despliegue-redis-0.0.1.tgz
+    version: 0.0.1
+generated: "2021-04-19T18:46:51.198975711+02:00"
