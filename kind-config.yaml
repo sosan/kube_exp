@@ -4,12 +4,12 @@ nodes:
 - role: control-plane
 - role: worker
   extraMounts:
-      - hostPath: emongodb
-        containerPath: /data/db
-      - hostPath: /mnt/despliegue-data/redis
-        containerPath: /data
-      - hostPath: /mnt/despliegue-data/api
-        containerPath: /usr/src/app
+  - hostPath: ./data-mongodb
+    containerPath: /data/db
+  - hostPath: ./data-redis
+    containerPath: /data
+  - hostPath: ./data-api
+    containerPath: /usr/src/app
   extraPortMappings:
   # en caso de uso de un nginx
   # api
@@ -29,4 +29,3 @@ nodes:
   # redis-commander
   - containerPort: 8081
     hostPort: 8083
-

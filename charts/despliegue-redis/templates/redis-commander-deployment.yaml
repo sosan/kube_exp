@@ -21,6 +21,6 @@ spec:
             - containerPort: 8081
           env:
             - name: REDIS_HOSTS
-              value: redis
+              value: redis-single
           resources: {}
 

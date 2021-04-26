@@ -195,7 +195,7 @@ persistence:
     # key: "value"
   annotations:
   #  "helm.sh/resource-policy": keep
-  storageSize: 8Gi
+  storageSize: 100Mi
 
 # Service object for servicing pods
 service:

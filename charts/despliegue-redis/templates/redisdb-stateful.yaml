@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-single
+spec:
+  serviceName: redis-single
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-single
+  template:
+    metadata:
+      labels:
+        app: redis-single
+    spec:
+      containers:
+      - name: redis
+        image: redis:6.2.2
+        ports:
+        - containerPort: 6379
+        command: ["redis-server", "/conf/redis.conf"]
+        # readinessProbe: {}
+        # livenessProbe: {}
+        resources:
+          requests:
+            memory: 200Mi
+            cpu: 250m
+          limits:
+            memory: 300Mi
+            cpu: 500m
+        env:
+        - name: ALLOW_EMPTY_PASSWORD
+          value: "no"
+        - name: REDIS_PASSWORD
+          value: admin
+        volumeMounts:
+        - name: conf
+          mountPath: /conf
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: conf
+        configMap:
+          name: redis-config-map
+          items:
+          - key: redis-config
+            path: redis.conf
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: local-storage
+      resources:
+        requests:
+          storage: 100Mi

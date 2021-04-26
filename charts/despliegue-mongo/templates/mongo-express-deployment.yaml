@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mongo-express-deployment
+  name: mongo-express
   labels:
     app: mongo-express
 spec:
@@ -17,22 +17,28 @@ spec:
       containers:
       - name: mongo-express
         image: mongo-express:0.54.0
-        resources: {}
+        resources:
+          requests:
+            memory: 300Mi
+            cpu: 250m
+          limits:
+            memory: 500Mi
+            cpu: 500m
         ports:
-          - containerPort: 8081
+        - containerPort: 8081
         env:
-          - name: ME_CONFIG_MONGODB_ADMINUSERNAME
-            valueFrom:
-              secretKeyRef:
-                name: mongodb-secret
-                key: mongo-root-username
-          - name: ME_CONFIG_MONGODB_ADMINPASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: mongodb-secret
-                key: mongo-root-password
-          - name: ME_CONFIG_MONGODB_SERVER
-            valueFrom:
-              configMapKeyRef:
-                name: mongodb-configmap
-                key: database_url
+        - name: ME_CONFIG_MONGODB_ADMINUSERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: mongo-root-username
+        - name: ME_CONFIG_MONGODB_ADMINPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: mongo-root-password
+        - name: ME_CONFIG_MONGODB_SERVER
+          valueFrom:
+            configMapKeyRef:
+              name: mongodb-configmap
+              key: database_url

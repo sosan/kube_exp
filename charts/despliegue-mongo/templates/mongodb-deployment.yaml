@@ -1,11 +1,14 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: mongodb-deployment
+  name: mongodb-single
   labels:
     app: mongodb
 spec:
+  serviceName: mongodb-single
   replicas: 1
+  updateStrategy:
+    type: RollingUpdate
   selector:
     matchLabels:
       app: mongodb
@@ -14,14 +17,19 @@ spec:
       labels:
         app: mongodb
     spec:
+      # serviceAccountName: mongodb-single
+      securityContext:
+        fsGroup: 1001
+        sysctls: []
       containers:
         - name: mongodb
           image: mongo:4.4.5
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 27017
+          imagePullPolicy: "IfNotPresent"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+          # utilizando secretos de kubernetes
           env:
-            # utilizando secretos de kubernetes
             - name: MONGO_INITDB_ROOT_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -32,16 +40,29 @@ spec:
                 secretKeyRef:
                   name: mongodb-secret
                   key: mongo-root-password
+          ports:
+            - name: mongodb
+              containerPort: 27017
           resources:
+            requests:
+              memory: 300Mi
+              cpu: 250m
             limits:
-              memory: "200Mi"
-              cpu: "250m"
-          securityContext:
-            allowPrivilegeEscalation: false
-#          volumeMounts:
-#              - name: mongodb-pvc
-#                mountPath: /data/db
-#      volumes:
-#        - name: mongodb-pvc
-#          persistentVolumeClaim:
-#            claimName: mongodb-pvc
+              memory: 500Mi
+              cpu: 500m
+          volumeMounts:
+            - name: data-mongodb
+              mountPath: /data/db
+      # volumes:
+      #   - name: data-mongodb
+      #     persistentVolumeClaim:
+      #       claimName: mongodb-pv
+  volumeClaimTemplates:
+    - metadata:
+        name: data-mongodb
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "500Mi"
