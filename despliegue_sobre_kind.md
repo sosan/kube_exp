@@ -14,7 +14,7 @@ Ya tenemos nuestra imagen(su nombre PRO: artifact) docker y ahora que? Antes de 
 
 - **Harbor.** Conjunto de herramientas que se despliegan en el cluster que securizan las imagens con politicas de acceso, escaneos, y firma de las imagenes, ademas de replicacion, cache del docker hub. https://goharbor.io/
 - **Nexus.** Soluciones para auditar y secuirzar las imagenes https://www.sonatype.com/products/repository-oss
-- **Jfrog Artifactory.** Si quieres tener un repositorio centralizado de todo, no solo de contenedores. https://jfrog.com/artifactory/
+- **Jfrog Artifactory.** Si quieres tener un repositorio centralizado de todo, no solo de contenedores. Por contra, soporte malo https://jfrog.com/artifactory/
 - **Quay.** Servicio de pago para securizar las imagenes
 - **Trivy.** Scanner de vulnerabilidades para imagenes https://github.com/aquasecurity/trivy
 
