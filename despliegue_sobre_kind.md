@@ -828,52 +828,69 @@ Redis-Commander y Mongo-express tienen el despliegue en forma de `Deployment` po
 
 ## SECRETOS
 
-Herramienta para tener los secretos encriptados en el manifiesto
+![credenciales](./imagenes/credential-management-meme.png)
 
-https://github.com/bitnami-labs/sealed-secrets
+Inebitablemente usaremos secretos(para dbs, apis de terceros, etc...) y para resolver la problematica hay una gran variedad de soluciones. 
 
-chart ejemplo:
-```
-apiVersion: bitnami.com/v1alpha1
-kind: SealedSecretController
-metadata:
-  name: SealedSecretController
-spec:
-  image:
-    repository: >-
-      quay.io/bitnami/sealed-secrets-controller@sha256:8e9a37bb2e1a6f3a8bee949e3af0e9dab0d7dca618f1a63048dc541b5d554985
-    pullPolicy: IfNotPresent
-  resources: {}
-  nodeSelector: {}
-  tolerations: []
-  affinity: {}
-  controller:
-    create: true
-  serviceAccount:
-    create: true
-    name: ''
-  rbac:
-    create: true
-    pspEnabled: false
-  secretName: sealed-secrets-key
-  ingress:
-    enabled: false
-    annotations: {}
-    path: /v1/cert.pem
-    hosts:
-      - chart-example.local
-    tls: []
-  crd:
-    create: true
-    keep: true
-  networkPolicy: false
-  securityContext:
-    runAsUser: 1001
-    fsGroup: 65534
-  podAnnotations: {}
-  podLabels: {}
-  priorityClassName: ''
-```
+- **Sin autentificacion.** Sin comentarios
+- **Local config file.** Para proyectos que seas el unico que trabaje en ello, es un metodo mas que suficiente. Si tienes que compartir secretos entre miembros del equipo se vuelve tedioso y con trabas. Se pueden encriptar/desencriptar los archivos de configuracion, secretos, etc... Es mejor que nada, pero añade que ahora tienes que mantener/compartir la clave de encriptacion/desencriptacion. Segun en que entornos no proporciona la posibilidad de monitorizar cuando los desarrolladores acceden a los secretos.
+
+  > Ejemplo de encriptacion archivo de configuracion:
+  >
+  >  ```
+  >  export ENCRYPTION_KEY=bla-alb-123-!"#!"#-&&/##$%#$% && \
+  >  openssl aes-256-cbc -a -salt -in secrets.env -out secrets.env.enc -pass pass:$ENCRYPTION_KEY && \
+  >  openssl aes-256-cbc -d -a -salt -in secrets.env.enc -out secrets.env -pass pass:$ENCRYPTION_KEY
+  >  ```
 
 
-> TODO: comentar despliegue de mongodb y redis
+
+  > Herramienta para tener los secretos encriptados en el manifiesto
+  > 
+  > https://github.com/bitnami-labs/sealed-secrets
+  > 
+  > chart ejemplo:
+  > 
+  >      apiVersion: bitnami.com/v1alpha1
+  >      kind: SealedSecretController
+  >      metadata:
+  >        name: SealedSecretController
+  >      spec:
+  >        image:
+  >          repository: >-
+  >            quay.io/bitnami/sealed-secrets-controller@sha256:8e9a37bb2e1a6f3a8bee949e3af0e9dab0d7dca618f1a63048dc541b5d554985
+  >          pullPolicy: IfNotPresent
+  >        resources: {}
+  >        nodeSelector: {}
+  >        tolerations: []
+  >        affinity: {}
+  >        controller:
+  >          create: true
+  >        serviceAccount:
+  >          create: true
+  >          name: ''
+  >        rbac:
+  >          create: true
+  >          pspEnabled: false
+  >        secretName: sealed-secrets-key
+  >        ingress:
+  >          enabled: false
+  >          annotations: {}
+  >          path: /v1/cert.pem
+  >          hosts:
+  >            - chart-example.local
+  >          tls: []
+  >        crd:
+  >          create: true
+  >          keep: true
+  >        networkPolicy: false
+  >        securityContext:
+  >          runAsUser: 1001
+  >          fsGroup: 65534
+  >        podAnnotations: {}
+  >        podLabels: {}
+  >        priorityClassName: ''
+  >      
+
+- **Manager de secretos.** Los proveedores cloud ofrecen este tipo de servicio. Las credenciales se pasan a la aplicacion como variables de entorno en tiempo de ejecucion. Los pros: te permite auditar, esta ligado al IAM. Los contras: la rotacion, cambios, etc... puede ser dolorosos.
+- **Credenciales Dinamicas Efimeras** La mejor implementacion de este concepto es Vault de hashicorp. https://www.vaultproject.io/
