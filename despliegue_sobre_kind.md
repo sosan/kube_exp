@@ -582,8 +582,13 @@ Todo este proceso de creacion del chart, se puede simplificar con un github-acti
 
 > En nuestro caso tenemos un chart online, y queremos traernos el chart a local por motivos que no nos fiamos que vamos a instalar, etc..(inspeccionarlo), creamos un directorio para el chart y dentro del directoio lazamos:
 
+Añadimos el repo:
 ```
-helm repo add repo-despliegue https://sosan.github.io/kube_exp/ && \
+helm repo add repo-despliegue https://sosan.github.io/kube_exp/
+```
+
+Nos traemos el mongo, mongo-express y descomprimimos
+```
 helm pull repo-despliegue/despliegue-mongo --untar
 ```
 - **repo-despliegue** es el nombre que le damos al repo del chart
@@ -591,37 +596,57 @@ helm pull repo-despliegue/despliegue-mongo --untar
 - **repo-despliegue** es el nombre del repo que le hemos dado: `repo-despliegue`
 - **despliegue-mongo** es el nombre del chart
 
+Nos treamos el redis, redis-comander y descomprimimos:
+
+```
+helm pull repo-despliegue/despliegue-redis --untar
+```
+
 > lo tenemos descomprimido y ahora podemos inspeccionar/modificar el chart y seguir con la instalacion local
 
 ```
-helm install mongo ./kube_exp/despliegue-mongo/ -n dev-mongo --create-namespace && \
-helm install redis ./kube_exp/despliegue-redis/ -n dev-redis --create-namespace && \
-helm install microservicios ./kube_exp/despliegue-microservicios/ -n dev-microservicios --create-namespace
+helm install mongo ./despliegue-mongo/ -n dev-mongo --create-namespace && \
+helm install redis ./despliegue-redis/ -n dev-redis --create-namespace
 ```
 
 - **mongo** es el nombre local que le damos al chart.
-- ./kube_exp/despliegue-mongo/ es la carpeta del chart
+- ./despliegue-mongo/ es la carpeta del chart
 - `--create-namespace` nos crea el namespace si no existe
+
+Saldra algo parecido a:
+
+```
+NAME: mongo
+NAMESPACE: dev-mongo
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+
+NAME: redis
+NAMESPACE: dev-redis
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+```
+
 
 ## INSTALACION ONLINE
 
-Confiamos en el repo destino y tiramos install sin pensarnoslo
+Confiamos en el repo destino y tiramos install sin pensarnoslo ni comprobar nada:
 
 ```
 helm repo add repo-despliegue https://sosan.github.io/kube_exp/ && \
 helm install mongo repo-despliegue/despliegue-mongo -n dev-mongo --create-namespace && \
-helm install redis repo-despliegue/despliegue-redis -n dev-redis --create-namespace && \
-helm install microservicios repo-despliegue/despliegue-microservicios -n dev-microservicios --create-namespace && \
+helm install redis repo-despliegue/despliegue-redis -n dev-redis --create-namespace
 ```
 - **mongo** es el nombre local que le damos al chart.
 - **repo-despliegue/despliegue-mongo** es el nombre del repo: `repo-despliegue` / `despliegue-mongo` es el nombre del chart que tiene online
 
 
-vemos como va desplegando mongo (control + c para salir):
+Si queremos ver como va desplegando mongo (control + c para salir):
 ```
 watch kubectl get svc,pod -n dev-mongo
 ```
-> Cambiar. tambien vemos como el `pod/api-*` no consigue hacer un pull a la imagen de la api, no reconoce la imagen.
 
 es posible que `pod/mongo-express-*` se caiga un par de veces por la conexion con mongodb, en 1min se vuelve estable la conexion entre mongo-express y mongodb. No realizamos healthcheck, a piñon!
 
@@ -645,6 +670,36 @@ Database connected
 Admin Database connected
 ```
 
+Si queremos ver los logs del redis-comander tiramos un:
+
+```
+kubectl logs service/redis-commander -n dev-redis
+```
+
+Y nos mostrara algo parecido a:
+
+```
+Parsing 1 REDIS_HOSTS into custom redis-commander config '/redis-commander/config/local-production.json'.
+node ./bin/redis-commander  
+Using scan instead of keys
+No Save: false
+listening on 0.0.0.0:8081
+access with browser at http://127.0.0.1:8081
+setUpConnection (R:redis-single:6379:0) Redis error Error: getaddrinfo EAI_AGAIN redis-single
+    at GetAddrInfoReqWrap.onlookup [as oncomplete] (dns.js:66:26)
+setUpConnection (R:redis-single:6379:0) Redis error Error: getaddrinfo EAI_AGAIN redis-single
+    at GetAddrInfoReqWrap.onlookup [as oncomplete] (dns.js:66:26)
+setUpConnection (R:redis-single:6379:0) Redis error Error: getaddrinfo EAI_AGAIN redis-single
+    at GetAddrInfoReqWrap.onlookup [as oncomplete] (dns.js:66:26)
+setUpConnection (R:redis-single:6379:0) Redis error Error: getaddrinfo EAI_AGAIN redis-single
+    at GetAddrInfoReqWrap.onlookup [as oncomplete] (dns.js:66:26)
+setUpConnection (R:redis-single:6379:0) Redis error Error: getaddrinfo EAI_AGAIN redis-single
+    at GetAddrInfoReqWrap.onlookup [as oncomplete] (dns.js:66:26)
+setUpConnection (R:redis-single:6379:0) Redis error Error: getaddrinfo EAI_AGAIN redis-single
+    at GetAddrInfoReqWrap.onlookup [as oncomplete] (dns.js:66:26)
+Redis Connection redis-single:6379 using Redis DB #0
+```
+
 > NOTA: existe aplicaciones como `wait` donde podemos inyectar un wait a otros contenedores que arranquen o bien usar livenessprobe. https://github.com/ufoscout/docker-compose-wait 
 >
 >     livenessProbe:
@@ -665,10 +720,30 @@ Admin Database connected
 
 > TODO: ampliar informacion healthcheck. en k8s es aconsejable que todas las apps tengan una url especifica para comprobar healthcheck
 
-Si queremos entrar dentro de la base de datos con la instruccion:
+Si queremos entrar dentro de la base de datos mongo con la instruccion:
 
 ```
 kubectl exec -it svc/mongodb-single -n dev-mongo -- bash
+```
+O en redis:
+
+```
+kubectl exec -it svc/redis-single -n dev-redis -- bash
+```
+
+O mas especifico en redis un ping:
+
+```
+kubectl exec -it svc/redis-single -n dev-redis -- redis-cli PING
+```
+
+Redis set:
+```
+kubectl exec -it svc/redis-single -n dev-redis -- redis-cli set "hola" "que tal"
+```
+Redis get
+```
+kubectl exec -it svc/redis-single -n dev-redis -- redis-cli get "hola"
 ```
 
 > NOTA: aunque el despliegue lo tengamos en diferentes namespaces `dev-mongo`, `dev-redis` desde otros namespaces pueden acceder a otross namespaces, en el caso de que queramos restringir accesos a otros namespaces, necesitariamos politicas de seguridad.
@@ -678,8 +753,7 @@ si queremos borrar el despliegue:
 
 ```
 helm uninstall mongo -n dev-mongo && \
-helm uninstall redis -n dev-redis && \
-helm uninstall microservicios -n dev-microservicios
+helm uninstall redis -n dev-redis
 ```
 
 
@@ -697,9 +771,8 @@ Abrimos navegador y lanzamos contra redis-commander y mongo-express:
 - localhost:8083
 - localhost:8082
 
-Si el servidor redis tiene contraseña, redis-commander no engancha el servidor redis. Toca añadirlo manualmente.
-La contraseña es `admin` esta en el archivo `charts/despliegue-redis/templates/redis-deployment.yaml`.
-> TODO: mejorar
+En el caso de que redis tenga contraseña es posible que el redis-commander no enganche a la primera el servidor redis. Toca añadirlo manualmente.
+La contraseña es `admin` esta en el archivo `despliegue-redis/templates/redis-deployment.yaml`.
 
 > Con `StatefulSet`
 
@@ -707,7 +780,7 @@ De esta forma no es necesario inscribir una IP, con el nombre del servicio `redi
 
 ![imagenconexion](imagenes/anadirconexion2.png)
 
-> Despliegue del servidor redis de forma con `Deployment`
+> Despliegue del servidor redis de forma `Deployment`
 
 Obtener la ip del servidor redis:
 
