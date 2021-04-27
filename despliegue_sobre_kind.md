@@ -720,7 +720,7 @@ Redis Connection redis-single:6379 using Redis DB #0
 
 > TODO: ampliar informacion healthcheck. en k8s es aconsejable que todas las apps tengan una url especifica para comprobar healthcheck
 
-Si queremos entrar dentro de la base de datos mongo con la instruccion:
+Si queremos iniciar un bash dentro de la base de datos mongo con la instruccion:
 
 ```
 kubectl exec -it svc/mongodb-single -n dev-mongo -- bash
@@ -731,7 +731,9 @@ O en redis:
 kubectl exec -it svc/redis-single -n dev-redis -- bash
 ```
 
-O mas especifico en redis un ping:
+> Nota: exit para salir
+
+O mas especifico en redis un ping sin necesidad de consola interactiva:
 
 ```
 kubectl exec -it svc/redis-single -n dev-redis -- redis-cli PING
